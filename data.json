@@ -1,54 +1,43 @@
 {
   "questions": [
     {
-      "question_id": "q4641",
-      "question": "Why is a raven like a writing desk?",
+      "question_id": 9636,
+      "question": "What is the answer to life, the universe, and everything?",
       "answers": [
         {
-          "answer_id": "a835",
-          "answer": "Huh?",
+          "answer_id": 246,
+          "answer": "42",
           "votes": 0
         },
         {
-          "answer_id": "a7384",
-          "answer": "Yes.",
-          "votes": 3
-        }
-      ]
-    },
-    {
-      "question_id": "q550",
-      "question": "What is the answer to life, the universe and everything?",
-      "answers": [
-        {
-          "answer_id": "a3627",
-          "answer": "Why of course it's 42.",
-          "votes": 0
-        },
-        {
-          "answer_id": "a5140",
-          "answer": "Yes.",
+          "answer_id": 7779,
+          "answer": "A life well lived.",
           "votes": 0
         }
       ]
     },
     {
-      "question_id": "q4295",
-      "question": "Which came first, the chicken or the egg?",
+      "question_id": 5875,
+      "question": "What's your favorite programming language?",
       "answers": []
     },
     {
-      "question_id": "q9180",
-      "question": "Why is the sky blue?",
+      "question_id": 7336,
+      "question": "JavaScript or Python?",
       "answers": [
         {
-          "answer_id": "a615",
-          "answer": "I live in Oregon, the sky is gray.",
+          "answer_id": 7146,
+          "answer": "Both are quite useful.",
           "votes": 0
         },
         {
-          "answer_id": "a4334",
-          "answer": "The sky reflects blue.",
+          "answer_id": 7800,
+          "answer": "JavaScript!",
+          "votes": 0
+        },
+        {
+          "answer_id": 2651,
+          "answer": "Python!",
           "votes": 0
         }
       ]
