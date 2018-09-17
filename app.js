@@ -1,122 +1,150 @@
 const express = require('express');
-const bodyParser = require('body-parser')
-const fs = require('fs');
-
-const data = require('./data.json');
 const records = require('./records');
 
 const app = express();
 
-app.use(bodyParser.json({ type: 'application/json' }));
+app.use(express.json());
 
 // GET all questions
-app.get('/questions', (req, res) => res.json(data.questions));
+app.get('/questions', (req, res) => res.json(records.getAll()));
+
+// GET specific question
+app.get('/questions/:qID', (req, res, next) => {
+  const question = records.getQuestion(req.params.qID);
+  if (!question){
+    next();
+  } else {
+    res.json(question);
+  }
+}); 
 
 // POST Create a new question
-app.post('/questions', (req, res) => {
+app.post('/questions', async (req, res, next) => {
   if(!req.body.question){
-    res.status(404).json({error: "Expecting a question."});
+    res.status(400).json({error: "Expecting a question."});
   } else {
-    records.create(req.body.question, null, (question) => {
-      records.save( ()=> res.status(201).json(question));
-    });
+    try {
+      const question = await records.createQuestion(req.body.question);
+      res.status(201).json(question);
+    } catch(err) {
+      next(err);
+    }
   }
 });
 
-// GET specific question
-app.get('/questions/:qID', (req, res) => {
-  records.fetchQuestion(req.params.qID, (question) => {
-    if (!question){
-      res.status(400).json({
-        error: "Question not found"
-      });
-    } else {
-      res.json(question);
-    }
-  });
-}); 
-
 // POST a new answer
-app.post('/questions/:qID', ( req, res ) => {
-  if (!req.body.answer){
-    res.status(400).json({
-      error: "Oops! You must provide an answer."
-    });
+app.post('/questions/:qID/answers', async (req, res, next) => {
+  const question = records.getQuestion(req.params.qID);
+
+  if (!question || !req.body.answer){
+    next();
   } else {
-    records.create(req.body.answer, req.params.qID, (question) => {
-      records.save( () => {res.status(201).json(question)});
-    });
+    try {
+      await records.createAnswer(req.body.answer, req.params.qID);
+      res.status(201).json(question);
+    } catch(err) {
+      next(err);
+    }
   }
 });
 
 // Vote up an answer up
-app.post('/questions/:qID/answers/:aID/vote-up', (req, res) => {
-  records.fetchAnswer(req.params.qID, req.params.aID, (answer) => {
-    if (!answer){
-      res.status(400).json({error: "Answer not found"});
-    } else {
-      answer.votes += 1
-      records.save(() => res.status(204).json({}));
+app.post('/questions/:qID/answers/:aID/vote-up', async (req, res, next) => {
+  const answer = records.getAnswer(req.params.qID, req.params.aID);
+
+  if(!answer){
+    res.status(404).json({error: "Answer not found"});
+  } else {
+    try {
+      await records.voteUp(answer);
+      res.status(204).end();
+    } catch(err){
+      next(err);
     }
-  });
+  }
 });
 
 // Vote an answer down 
-app.post('/questions/:qID/answers/:aID/vote-down', (req, res) => {
-  records.fetchAnswer(req.params.qID, req.params.aID, (answer) => {
-    if (!answer){
-      res.status(400).json({error: "Answer not found"});
-    } else {
-      answer.votes -= 1;
-      records.save(() => res.status(204).json({}));
+app.post('/questions/:qID/answers/:aID/vote-down', async (req, res, next) => {
+  const answer = records.getAnswer(req.params.qID, req.params.aID);
+
+  if(!answer){
+    res.status(404).json({error: "Answer not found"});
+  } else {
+    try {
+      await records.voteDown(answer);
+      res.status(204).end();
+    } catch(err){
+      next(err);
     }
-  });
+  }
 });
 
 // EDIT A QUESTION
-app.put('/questions/:qID', (req, res) => {
-  records.update(req.params.qID, null, req.body, () => {
-    if (!req.body) {
-      res.status(400).json({error: "Question not found"});
-    } else {
-      records.save(() => res.status(201).json({}));
+app.put('/questions/:qID', async (req, res, next) => {
+  const question = records.getQuestion(req.params.qID);
+  
+  if(!question){
+    res.status(404).json({error: "Question not found"});
+  } else {
+    try {
+      await records.editQuestion(question, req.body);
+      res.status(204).end();
+    } catch(err){
+      next(err);
     }
-  });
+  }
 });
 
 //EDIT AN ANSWER
 
-app.put('/questions/:qID/answers/:aID', (req, res) => {
-  records.update(req.params.qID, req.params.aID, req.body, () => {
-    if (!req.body) {
-      res.status(400).json({error: "Question not found"});
-    } else {
-      records.save(() => res.status(201).json({}));
+app.put('/questions/:qID/answers/:aID', async (req, res, next) => {
+  const answer = records.getAnswer(req.params.qID, req.params.aID);
+
+  if(!answer){
+    res.status(404).json({error: "Question or answer not found"});
+  } else {
+    try {
+      await records.editAnswer(answer, req.body.answer);
+      res.status(204).end();
+    } catch(err){
+      next(err);
     }
-  });
+  }
 });
 
 //DELETE A QUESTION 
+app.delete('/questions/:qID', async (req, res, next) => {
+  const question = records.getQuestion(req.params.qID);
 
-app.delete('/questions/:qID', (req, res) => {
-  records.delete(req.params.qID, null, () => {
-    records.save(()=> res.status(201).json({}));
-  });
+  if (!question){
+    res.status(404).json({error: "Question not found"});
+  } else {
+    try {
+      await records.deleteQuestion(question);
+      res.status(204).end();
+    } catch(err){
+      next(err);
+    }
+  }
 });
 
-// DELETE AN ANSWER 
-app.delete('/questions/:qID/answers/:aID', (req, res) => {
-  records.delete(req.params.qID, req.params.aID, ()=> {
-    records.save(() => res.status(201).json({}));
-  });
-});
+// // DELETE AN ANSWER 
+app.delete('/questions/:qID/answers/:aID', async (req, res, next) => {
+  const question = records.getQuestion(req.params.qID);
+  const answer = records.getAnswer(req.params.qID, req.params.aID);
 
-// DELETE everything (for testing only)
-app.get('/remove', (req, res) => {
-  data.questions = [];
-  fs.writeFile('data.json', JSON.stringify(data, null, 2));
-  res.end();
-}); 
+  if (!answer){
+    res.status(404).json({error: "Answer not found"});
+  } else {
+    try {
+      await records.deleteAnswer(question, answer);
+      res.status(204).end();
+    } catch(err){
+      next(err);
+    }
+  }
+});
 
 app.use(function(req, res, next){
   const err = new Error("Not Found");
@@ -136,4 +164,12 @@ app.use(function(err, req, res, next){
 app.listen(3000, () => console.log('Example app listening on port 3000!'));
 
 
-
+//Questions for James/To dos: 
+// I need to make sure that the question exists AND that they've provided an answer...
+  // If the keys aren't right when a question or answer is posted/updated, that property
+  // simply disappears 
+// What should I expect from the client? Just the answer body, or an object?
+// Should this route just be to the question id, or to qID/answers? 
+// overall project structure
+// double check best practices to export functions from exports.js
+// comment code, ask James about writing documentation for the module
